@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI UX patterns · Miguel Clavel</title>
+<meta name="description" content="Seven interface patterns for AI products people can trust, each with a working demo: sources, confidence, editable output, undo, why we ask, clear boundaries, and review before acting. By Miguel Clavel.">
+<style>
+  :root { --page: #F9F9FB; --panel: #FFFFFF; --ink: #1D1D21; --muted: #67676C; --rule: #DADADD; --soft: #F1F1F4; --link: #1F5FD1; --ok: #1E7F45; --warn: #9A5B00; --bad: #B42318; --focus: #155EEF; }
+  @media (prefers-color-scheme: dark) { :root { --page: #0F0F11; --panel: #17171A; --ink: #F5F5F7; --muted: #A3A3A8; --rule: #2E2E33; --soft: #1F1F23; --link: #7AAEFF; --ok: #5BD38A; --warn: #F0B54A; --bad: #FF8A80; --focus: #9CC3FF; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--page); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; line-height: 1.55; -webkit-font-smoothing: antialiased; }
+  a { color: var(--link); }
+  :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+  .wrap { width: min(920px, 100% - 32px); margin: 0 auto; }
+  header { padding: 64px 0 8px; }
+  .by { font-size: 14px; color: var(--muted); margin: 0 0 10px; } .by a { color: inherit; }
+  h1 { margin: 0; font-size: clamp(36px, 6vw, 56px); line-height: 1.05; letter-spacing: -0.035em; }
+  .lede { font-size: 18px; color: var(--muted); max-width: 680px; }
+  .toc { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 0; padding: 0; list-style: none; }
+  .toc a { display: inline-block; padding: 6px 12px; border: 1px solid var(--rule); border-radius: 999px; text-decoration: none; color: var(--ink); font-size: 14px; background: var(--panel); }
+  section { margin: 56px 0 0; }
+  .num { font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  h2 { margin: 4px 0 10px; font-size: 26px; letter-spacing: -0.02em; line-height: 1.2; }
+  .demo { border: 1px solid var(--rule); border-radius: 16px; background: var(--panel); padding: 20px; }
+  .notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 14px 0 0; font-size: 15px; }
+  .notes div { background: var(--soft); border-radius: 12px; padding: 12px 14px; }
+  .notes b { display: block; font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 4px; }
+  .bubble { background: var(--soft); border-radius: 14px; padding: 12px 14px; margin: 0 0 10px; }
+  .me { background: transparent; border: 1px solid var(--rule); margin-left: auto; max-width: 70%; }
+  button.btn { font: inherit; font-size: 14px; font-weight: 600; padding: 7px 14px; border-radius: 10px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--ink); color: var(--page); border-color: var(--ink); }
+  .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  sup button { font: inherit; font-size: 11px; font-weight: 700; color: var(--link); background: none; border: 1px solid var(--rule); border-radius: 6px; padding: 0 5px; cursor: pointer; }
+  .source { display: none; margin: 10px 0 0; padding: 10px 12px; border-left: 3px solid var(--link); background: var(--soft); border-radius: 0 10px 10px 0; font-size: 14px; }
+  .source.on { display: block; }
+  .meter { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--soft); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; }
+  textarea { width: 100%; font: inherit; font-size: 15px; padding: 10px 12px; border: 1px solid var(--rule); border-radius: 10px; background: var(--page); color: var(--ink); min-height: 72px; }
+  .steps { list-style: none; margin: 0; padding: 0; }
+  .steps li { display: flex; justify-content: space-between; gap: 10px; align-items: center; padding: 10px 0; border-top: 1px solid var(--rule); }
+  .steps li:first-child { border-top: 0; }
+  .steps .q { color: var(--muted); font-size: 13px; display: block; }
+  .chips { display: flex; gap: 8px; flex-wrap: wrap; }
+  .chips button { font: inherit; font-size: 14px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); cursor: pointer; }
+  .chips button[aria-pressed="true"] { background: var(--ink); color: var(--page); border-color: var(--ink); }
+  details.why { margin-top: 8px; font-size: 14px; } details.why summary { cursor: pointer; color: var(--link); }
+  .preview { border: 1px dashed var(--rule); border-radius: 12px; padding: 12px 14px; font-size: 14px; }
+  .preview dt { color: var(--muted); font-size: 12px; } .preview dd { margin: 0 0 8px; }
+  .status { font-size: 14px; color: var(--ok); min-height: 1.5em; margin: 8px 0 0; }
+  footer { margin: 72px 0 0; padding: 24px 0 48px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 14px; } footer a { color: inherit; }
+  .concept { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: var(--soft); color: var(--muted); margin-left: 6px; vertical-align: middle; }
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <p class="by">By <a href="https://miguelclavel.com/?utm_source=github&amp;utm_medium=ai-ux-patterns">Miguel Clavel</a>, Senior Product Designer</p>
+  <h1>AI UX patterns</h1>
+  <p class="lede">Seven interface patterns for AI products people can trust. Each one has a working demo, when to use it, and what goes wrong without it. The demos are scripted, so there's no model behind them: the point is the interface, not the AI.</p>
+  <ul class="toc">
+    <li><a href="#sources">Show your sources</a></li><li><a href="#confidence">Say how sure you are</a></li><li><a href="#edit">Let people edit it</a></li>
+    <li><a href="#undo">Go back a step</a></li><li><a href="#why">Say why you ask</a></li><li><a href="#boundaries">Clear boundaries</a></li><li><a href="#review">Review before acting</a></li>
+  </ul>
+</header>
+
+<section id="sources">
+  <p class="num">Pattern 1 · Transparency</p>
+  <h2>Show your sources</h2>
+  <div class="demo">
+    <div class="bubble me">Does my policy cover a rental car after an accident?</div>
+    <div class="bubble">Yes, if you added rental reimbursement: up to $30 a day for 30 days while your car is in the shop <sup><button type="button" data-src="s1" aria-expanded="false" aria-controls="s1">1</button></sup>. It doesn't apply if the car is only being inspected <sup><button type="button" data-src="s2" aria-expanded="false" aria-controls="s2">2</button></sup>.
+      <div class="source" id="s1"><b>Your policy, page 4, Rental reimbursement:</b> "We will pay up to $30 per day, for no more than 30 days, for a rental vehicle while your covered auto is being repaired."</div>
+      <div class="source" id="s2"><b>Your policy, page 4, Exclusions:</b> "Coverage does not apply when the covered auto is withdrawn from use only for inspection or estimate."</div>
+    </div>
+  </div>
+  <div class="notes"><div><b>Use it when</b>The answer is about money, health, rules or anything someone will act on.</div><div><b>Without it</b>A confident wrong answer looks exactly like a right one.</div><div><b>Where I've used it</b>Every answer on my chat portfolio says it was written from my resume and case studies.</div></div>
+</section>
+
+<section id="confidence">
+  <p class="num">Pattern 2 · Honesty</p>
+  <h2>Say how sure you are</h2>
+  <div class="demo">
+    <div class="chips" role="group" aria-label="Pick a question">
+      <button type="button" aria-pressed="true" data-conf="high">What's my deductible?</button>
+      <button type="button" aria-pressed="false" data-conf="mid">Will my rate go up after this claim?</button>
+      <button type="button" aria-pressed="false" data-conf="low">Is the other driver at fault?</button>
+    </div>
+    <div class="bubble" style="margin-top:14px" id="confAnswer" aria-live="polite"></div>
+  </div>
+  <div class="notes"><div><b>Use it when</b>Some answers are facts on file and some are guesses.</div><div><b>Without it</b>Every answer sounds equally sure, so people trust the wrong ones.</div><div><b>The rule</b>Low confidence should change what the interface offers next, not just the label.</div></div>
+</section>
+
+<section id="edit">
+  <p class="num">Pattern 3 · User control</p>
+  <h2>Let people edit the AI's work</h2>
+  <div class="demo">
+    <p style="margin:0 0 8px;color:var(--muted);font-size:14px">Suggested reply to a customer</p>
+    <textarea id="draft" aria-label="Suggested reply">Thanks for reaching out! Your claim is approved and the payment will arrive in 3 to 5 business days.</textarea>
+    <div class="row"><button class="btn primary" type="button" id="useDraft">Use this</button><button class="btn" type="button" id="resetDraft">Back to the suggestion</button><button class="btn" type="button" id="dismissDraft">Write my own</button></div>
+    <p class="status" id="draftStatus" role="status"></p>
+  </div>
+  <div class="notes"><div><b>Use it when</b>The AI drafts something a person sends or signs.</div><div><b>Without it</b>People either accept bad drafts or abandon the feature.</div><div><b>The rule</b>The suggestion is a starting point. The person's edit always wins, and is never overwritten.</div></div>
+</section>
+
+<section id="undo">
+  <p class="num">Pattern 4 · Correction and recovery</p>
+  <h2>Go back a step without starting over</h2>
+  <div class="demo">
+    <ul class="steps" id="steps"></ul>
+    <p class="status" id="stepStatus" role="status"></p>
+  </div>
+  <div class="notes"><div><b>Use it when</b>A conversation or flow collects answers one at a time.</div><div><b>Without it</b>One wrong tap means starting the whole thing again.</div><div><b>Where I've used it</b>The conversational insurance quote I designed keeps every answer editable at every stage.</div></div>
+</section>
+
+<section id="why">
+  <p class="num">Pattern 5 · Trust</p>
+  <h2>Say why you're asking</h2>
+  <div class="demo">
+    <div class="bubble">What's your date of birth?
+      <details class="why"><summary>Why we ask</summary>Insurers price by age band. We use it only to compare quotes, and you can see exactly who receives it before you continue.</details>
+    </div>
+    <div class="bubble">Can we pull your driving record?
+      <details class="why"><summary>Why we ask</summary>It makes the quote match what you'll actually pay. It's optional: say no and you'll get an estimate instead.</details>
+      <div class="row"><button class="btn" type="button">Yes, pull it</button><button class="btn" type="button">No, estimate instead</button></div>
+    </div>
+  </div>
+  <div class="notes"><div><b>Use it when</b>The question is personal, regulated or surprising.</div><div><b>Without it</b>People drop off at exactly the question that matters most.</div><div><b>Where I've used it</b>The conversational quote asks for consent at the point of collection, not in a wall of text at the start.</div></div>
+</section>
+
+<section id="boundaries">
+  <p class="num">Pattern 6 · Clear boundaries</p>
+  <h2>Say what it can't do, and hand off well</h2>
+  <div class="demo">
+    <div class="bubble me">Can you cancel my policy and refund me?</div>
+    <div class="bubble">I can't cancel policies or move money. A licensed agent can do both, usually within a day. I'll pass along what we've covered so you don't have to repeat it.
+      <div class="row"><button class="btn primary" type="button" id="handoff">Talk to an agent</button><button class="btn" type="button">Not now</button></div>
+      <p class="status" id="handoffStatus" role="status"></p>
+    </div>
+  </div>
+  <div class="notes"><div><b>Use it when</b>There are things the system must never do on its own.</div><div><b>Without it</b>It tries anyway, or refuses with no way forward.</div><div><b>The rule</b>A boundary always comes with a next step, and the context travels with the handoff.</div></div>
+</section>
+
+<section id="review">
+  <p class="num">Pattern 7 · Human oversight</p>
+  <h2>Show exactly what will happen, before it happens</h2>
+  <div class="demo">
+    <div class="bubble">I've drafted your request. Here's exactly what will be sent:</div>
+    <dl class="preview"><dt>To</dt><dd>Claims team</dd><dt>Message</dt><dd>Requesting a rental car under rental reimbursement while my car is repaired. Claim opened today.</dd><dt>Attached</dt><dd>Repair estimate (1 file)</dd></dl>
+    <div class="row"><button class="btn primary" type="button" id="sendIt">Send it</button><button class="btn" type="button">Edit first</button></div>
+    <p class="status" id="sendStatus" role="status"></p>
+  </div>
+  <div class="notes"><div><b>Use it when</b>An agent is about to act on someone's behalf: send, pay, book, delete.</div><div><b>Without it</b>People find out what the AI did after it's too late to stop it.</div><div><b>Where I've used it</b>The paint tool on my second portfolio shows your message, name and email before anything is sent.</div></div>
+</section>
+
+<footer>
+  These patterns follow six principles I design AI products by: human oversight, user control, transparency, correction and recovery, predictable outcomes, and clear boundaries. The demos are concepts with scripted content and made up sample data.<br>
+  <a href="https://github.com/miguelclavel/ai-ux-patterns">Source and notes</a> · <a href="https://miguelclavel.com/?utm_source=github&amp;utm_medium=ai-ux-patterns">miguelclavel.com</a> · <a href="https://github.com/miguelclavel">GitHub</a> · MIT licensed
+</footer>
+</div>
+<script>
+  // 1. Sources: each citation toggles its source text.
+  document.querySelectorAll('[data-src]').forEach(b => b.addEventListener('click', () => {
+    const s = document.getElementById(b.dataset.src), on = !s.classList.contains('on');
+    s.classList.toggle('on', on); b.setAttribute('aria-expanded', String(on));
+  }));
+
+  // 2. Confidence: the label and what's offered next both change.
+  const CONF = {
+    high: ['var(--ok)', 'From your policy', 'Your collision deductible is $500. That\'s on page 2 of your policy.', ''],
+    mid: ['var(--warn)', 'An estimate', 'Probably a little, if you\'re found at fault. Insurers weigh this differently, so treat this as a range, not an answer.', '<div class="row"><button class="btn" type="button">See what affects it</button></div>'],
+    low: ['var(--bad)', 'Not something I can tell', 'I can\'t decide fault. That\'s settled by the adjusters, using the police report and statements.', '<div class="row"><button class="btn primary" type="button">Ask an adjuster</button></div>']
+  };
+  const confAnswer = document.getElementById('confAnswer');
+  function showConf(k) {
+    const [c, label, text, next] = CONF[k];
+    confAnswer.innerHTML = `<span class="meter"><span class="dot" style="background:${c}"></span>${label}</span><p style="margin:8px 0 0">${text}</p>${next}`;
+    document.querySelectorAll('[data-conf]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.conf === k)));
+  }
+  document.querySelectorAll('[data-conf]').forEach(b => b.addEventListener('click', () => showConf(b.dataset.conf)));
+  showConf('high');
+
+  // 3. Editable output: the person's edit wins and is never overwritten.
+  const draft = document.getElementById('draft'), SUGGESTION = draft.value, ds = document.getElementById('draftStatus');
+  draft.addEventListener('input', () => { ds.textContent = draft.value === SUGGESTION ? '' : 'Your edits are kept. Nothing will replace them.'; });
+  document.getElementById('useDraft').onclick = () => { ds.textContent = draft.value === SUGGESTION ? 'Used the suggestion as written.' : 'Used your edited version.'; };
+  document.getElementById('resetDraft').onclick = () => { draft.value = SUGGESTION; ds.textContent = 'Back to the original suggestion.'; };
+  document.getElementById('dismissDraft').onclick = () => { draft.value = ''; draft.focus(); ds.textContent = 'Blank. Write your own.'; };
+
+  // 4. Go back a step: change one answer, keep the rest.
+  const STEPS = [['Vehicle', 'What car do you drive?', ['Toyota Corolla', 'Honda Civic', 'Ford F-150']], ['Use', 'How do you mostly use it?', ['Commuting', 'Pleasure', 'Business']], ['Drivers', 'Who drives it?', ['Just me', 'Me and a partner', 'Me and a teen']]];
+  const answers = ['Toyota Corolla', 'Commuting', 'Just me'];
+  const stepsEl = document.getElementById('steps'), ss = document.getElementById('stepStatus');
+  function renderSteps() {
+    stepsEl.innerHTML = STEPS.map(([name, q, opts], i) => `<li><span><span class="q">${name}: ${q}</span><b>${answers[i]}</b></span><span class="chips">${opts.filter(o => o !== answers[i]).map(o => `<button type="button" data-i="${i}" data-v="${o}">${o}</button>`).join('')}</span></li>`).join('');
+    stepsEl.querySelectorAll('button').forEach(b => b.onclick = () => { answers[b.dataset.i] = b.dataset.v; renderSteps(); ss.textContent = `Changed ${STEPS[b.dataset.i][0].toLowerCase()}. Everything else is still here.`; });
+  }
+  renderSteps();
+
+  // 6 and 7. Handoff and review before acting.
+  document.getElementById('handoff').onclick = () => { document.getElementById('handoffStatus').textContent = 'Connecting you. The agent sees this conversation, so you won\'t have to repeat yourself.'; };
+  document.getElementById('sendIt').onclick = () => { document.getElementById('sendStatus').textContent = 'Sent, exactly as shown above. (In this demo, nothing really goes anywhere.)'; };
+</script>
+</body>
+</html>
